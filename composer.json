@@ -1,0 +1,32 @@
+{
+	"name": "mcaskill/slim-polyglot",
+	"type": "library",
+	"description": "Slim Framework language resolution middleware",
+	"keywords": [ "slim", "framework", "middleware", "language", "multilingual", "polylingual" ],
+	"homepage": "https://github.com/mcaskill/Slim-Polyglot",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Chauncey McAskill",
+			"email": "chauncey@mcaskill.ca",
+			"homepage": "https://mcaskill.ca"
+		}
+	],
+	"require": {
+		"php": ">=5.5.0",
+		"willdurand/negotiation": "^2.0"
+	},
+	"require-dev": {
+		"slim/slim": "^3.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"McAskill\\Slim\\Polyglot\\": "src"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Slim\\Slim\\Polyglot\\Tests\\": "tests"
+		}
+	}
+}
