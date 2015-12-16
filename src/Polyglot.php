@@ -111,11 +111,18 @@ class Polyglot
     protected $regex = self::ISO639;
 
     /**
-     * Whether a language must always be prepended to a URI
+     * Whether a language must always be present in a URI
      *
      * @var boolean
      */
-    protected $languagePathRequired = false;
+    protected $languageRequiredInUri = false;
+
+    /**
+     * Whether routes are defined with a language (e.g., `{lang:en|fr}/foo`)
+     *
+     * @var boolean
+     */
+    protected $languageIncludedInRoutes = false;
 
     /**
      * Third-party call stack
@@ -151,43 +158,67 @@ class Polyglot
      *
      * Since each parameter requires a distinct type, parameters can be omitted if uneeded.
      *
-     * @param null|array    $languages            Defines the supported languages
-     * @param null|string   $fallbackLanguage     Defines the fallback language; must exist in $languages. If undefined, the first item from $languages is used.
-     * @param null|callable $callback             Defines a function or method to call when the language has been established.
-     * @param null|bool     $languagePathRequired Defines whether a language is always present in the URI.
+     * @param array                    $languages                Defines the supported languages.
+     *     Optionally, this parameter can be used like an arguments bag.
+     * @param null|string              $fallbackLanguage         Defines the fallback language;
+     *     must exist in $languages. If undefined, the first item from $languages is used.
+     * @param null|callable|callable[] $callbacks                Defines one or more functions or methods
+     *     to call when the language has been established.
+     * @param null|boolean             $languageRequiredInUri    Defines whether a language is always
+     *     present in the URI.
+     * @param null|boolean             $languageIncludedInRoutes Defines whether routes include language.
      *
      * @throws RuntimeException If the session cannot be found.
      * @todo   Modify the constructor to handle an argument bag.
      */
-    public function __construct($languages = [], $fallbackLanguage = null, $callback = null, $languagePathRequired = null)
+    public function __construct(array $languages, $fallbackLanguage = null, $callbacks = null, $languageRequiredInUri = null, $languageIncludedInRoutes = null)
     {
-        $args = func_get_args();
-        $num  = min(func_num_args(), 3);
+        $default_args = [
+            'languages'                => [],
+            'fallbackLanguage'         => null,
+            'callbacks'                => null,
+            'languageRequiredInUri'    => null,
+            'languageIncludedInRoutes' => null
+        ];
 
-        for ( $i = 0; $i < $num; $i++ ) {
-            $arg = $args[$i];
+        if ( array_intersect(array_keys($default_args), array_keys($languages)) ) {
+            $args = array_merge($default_args, $languages);
 
-            if (is_callable($arg)) {
-                $this->addCallback($arg);
-                continue;
+            if ( isset($args['callback']) ) {
+                $args['callbacks'] = $args['callback'];
             }
 
-            switch (gettype($arg)) {
-                case 'array':
-                    if (count($arg)) {
-                        $this->setSupportedLanguages($arg);
-                        $this->setCallbacks($arg);
-                    }
-                    break;
-
-                case 'string':
-                    $this->setFallbackLanguage($arg);
-                    break;
-
-                case 'boolean':
-                    $this->isLanguageRequired($arg);
-                    break;
+            if ( isset($args['callable']) ) {
+                $args['callbacks'] = $args['callable'];
             }
+
+            if ( isset($args['callables']) ) {
+                $args['callbacks'] = $args['callables'];
+            }
+
+            extract($args, EXTR_IF_EXISTS);
+        }
+
+        if (is_array($languages)) {
+            $this->setSupportedLanguages($languages);
+        }
+
+        if (isset($fallbackLanguage)) {
+            $this->setFallbackLanguage($fallbackLanguage);
+        }
+
+        if (is_callable($callbacks)) {
+            $this->addCallback($callbacks);
+        } elseif (is_array($callbacks)) {
+            $this->setCallbacks($callbacks);
+        }
+
+        if (isset($languageRequiredInUri)) {
+            $this->isLanguageRequiredInUri($languageRequiredInUri);
+        }
+
+        if (isset($languageIncludedInRoutes)) {
+            $this->isLanguageIncludedInRoutes($languageIncludedInRoutes);
         }
     }
 
@@ -235,7 +266,7 @@ class Polyglot
             }
 
             /** If the language is required, make sure the URI has it. */
-            if ( $this->isLanguageRequired() ) {
+            if ( $this->isLanguageRequiredInUri() ) {
                 $path       = $this->prependLanguage($uri->getPath(), $language);
                 $response   = $response->withRedirect($uri->withPath($path), 303);
                 $redirected = true;
@@ -269,7 +300,7 @@ class Polyglot
             $redirected = true;
         }
 
-        if ( ! $redirected ) {
+        if ( ! $redirected && ! $this->isLanguageIncludedInRoutes() ) {
             $request = $request->withUri(
                 $uri->withPath(
                     $this->stripLanguage(
@@ -614,13 +645,29 @@ class Polyglot
      *
      * @return bool
      */
-    public function isLanguageRequired($state = null)
+    public function isLanguageRequiredInUri($state = null)
     {
         if (isset($state)) {
-            $this->languagePathRequired = (bool) $state;
+            $this->languageRequiredInUri = (bool) $state;
         }
 
-        return $this->languagePathRequired;
+        return $this->languageRequiredInUri;
+    }
+
+    /**
+     * Determine if languages are included in a route.
+     *
+     * @param bool|null $state
+     *
+     * @return bool
+     */
+    public function isLanguageIncludedInRoutes($state = null)
+    {
+        if (isset($state)) {
+            $this->languageIncludedInRoutes = (bool) $state;
+        }
+
+        return $this->languageIncludedInRoutes;
     }
 
     /**
