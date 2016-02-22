@@ -125,6 +125,13 @@ class Polyglot
     protected $languageIncludedInRoutes = false;
 
     /**
+     * Query string keys to look for when resolving the current language (e.g., `?lang=fr`)
+     *
+     * @var string[]
+     */
+    protected $queryKeys = [];
+
+    /**
      * Third-party call stack
      *
      * The stack is called after a language has been resolved.
@@ -166,17 +173,19 @@ class Polyglot
      *     to call when the language has been established.
      * @param null|boolean             $languageRequiredInUri    Defines whether a language is always
      *     present in the URI.
+     * @param null|string|string[]     $queryStringKeys          Defines the keys to look for among the request's query parameters.
      * @param null|boolean             $languageIncludedInRoutes Defines whether routes include language.
      *
      * @throws RuntimeException If the session cannot be found.
      * @todo   Modify the constructor to handle an argument bag.
      */
-    public function __construct(array $languages, $fallbackLanguage = null, $callbacks = null, $languageRequiredInUri = null, $languageIncludedInRoutes = null)
+    public function __construct(array $languages, $fallbackLanguage = null, $callbacks = null, $queryStringKeys = null, $languageRequiredInUri = null, $languageIncludedInRoutes = null)
     {
         $default_args = [
             'languages'                => [],
             'fallbackLanguage'         => null,
             'callbacks'                => null,
+            'queryStringKeys'          => [],
             'languageRequiredInUri'    => null,
             'languageIncludedInRoutes' => null
         ];
@@ -211,6 +220,12 @@ class Polyglot
             $this->addCallback($callbacks);
         } elseif (is_array($callbacks)) {
             $this->setCallbacks($callbacks);
+        }
+
+        if (is_string($queryStringKeys)) {
+            $this->addQueryKey($queryStringKeys);
+        } elseif (is_array($queryStringKeys)) {
+            $this->setQueryKeys($queryStringKeys);
         }
 
         if (isset($languageRequiredInUri)) {
@@ -253,8 +268,13 @@ class Polyglot
         /** @var string For manipulation later on in this method. */
         $uri = $request->getUri();
 
+        /** @var string Start language resolution with the current request's query parameters. */
+        $language = $this->getFromQuery($request);
+
         /** @var string Start language resolution with the current request URI. */
-        $language = $this->getFromPath($request);
+        if ( empty($language) ) {
+            $language = $this->getFromPath($request);
+        }
 
         if ( empty($language) ) {
             /** @var string Retrieve a language from the client's headers. */
@@ -424,6 +444,23 @@ class Polyglot
     }
 
     /**
+     * Retrieve the language from the requested URI's query string.
+     *
+     * @param  RequestInterface  $request  PSR7 request object
+     *
+     * @return null|string
+     */
+    protected function getFromQuery(ServerRequestInterface $request)
+    {
+        $params  = $request->getQueryParams();
+        $matches = array_intersect_key($params, array_flip($this->getQueryKeys()));
+
+        if ( count($matches) ) {
+            return reset($matches);
+        }
+    }
+
+    /**
      * Retrieve the supported languages
      *
      * @return array
@@ -560,7 +597,7 @@ class Polyglot
      */
     public function setCallbacks(array $callables)
     {
-        $this->callables = [];
+        $this->callbacks = [];
 
         foreach ($callables as $callable) {
             if (is_callable($callable)) {
@@ -581,6 +618,54 @@ class Polyglot
     public function addCallback(callable $callable)
     {
         $this->callbacks[] = $callable;
+
+        return $this;
+    }
+
+    /**
+     * Retrieve the query string keys.
+     *
+     * @return string[] The query string keys.
+     */
+    public function getQueryKeys()
+    {
+        return $this->queryKeys;
+    }
+
+    /**
+     * Set the query string keys to look for when resolving the current language.
+     *
+     * @param string[] $keys The query string keys.
+     *
+     * @return self
+     */
+    public function setQueryKeys(array $keys)
+    {
+        $this->queryKeys = [];
+
+        foreach ($keys as $key) {
+            if (is_string($key)) {
+                $this->addQueryKey($key);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add a query string key to look for when resolving the current language.
+     *
+     * @param string $key A query string key.
+     *
+     * @return self
+     */
+    public function addQueryKey($key)
+    {
+        if ( ! is_string($key) ) {
+            throw new InvalidArgumentException('Query string key must be a string.');
+        }
+
+        $this->queryKeys[] = $key;
 
         return $this;
     }
