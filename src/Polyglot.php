@@ -46,62 +46,62 @@ class Polyglot
     /**
      * @const Matches ISO 639-1, ISO 639-2, and ISO 639-3
      */
-    const ISO639   = '[a-z]{2,3}';
+    const ISO639   = '(?<language>[a-z]{2,3})(?![-_])';
 
     /**
      * @const Matches ISO 639-1 (alpha-2)
      */
-    const ISO639_1 = '[a-z]{2}';
+    const ISO639_1 = '(?<language>[a-z]{2})(?![-_])';
 
     /**
      * @const Matches ISO 639-2/B and ISO 639-2/T (alpha-3)
      */
-    const ISO639_2 = '[a-z]{3}';
+    const ISO639_2 = '(?<language>[a-z]{3})(?![-_])';
 
     /**
      * @const Matches ISO 639-3 (alpha-3)
      */
-    const ISO639_3 = '[a-z]{3}';
+    const ISO639_3 = '(?<language>[a-z]{3})(?![-_])';
 
     /**
      * @const Matches ISO 639-6 (alpha-4)
      * @deprecated Withdrawn in 2014.
      */
-    const ISO639_6 = '[a-z]{4}';
+    const ISO639_6 = '(?<language>[a-z]{4})(?![-_])';
 
     /**
      * @const Matches ISO 3166-1 (alpha-2)
      */
-    const ISO3166_1 = '[A-Z]{2}';
+    const ISO3166_1 = '(?<language>[A-Z]{2})(?![-_])';
 
     /**
      * @const Matches UN M.49 (digit-3)
      */
-    const UNM49 = '[0-9]{3}';
+    const UNM49 = '(?<language>[0-9]{3})(?![-_])';
 
     /**
      * @const Matches an IETF language tag composed of two subtags:
      *        • 2-letter language (ISO 639-1)
      *        • 2-letter country (ISO 3166-1)
      */
-    # PHP 5.6 -- const RFC1766 = self::ISO639_1 . '(?:-' . self::ISO3166_1 . ')?';
-    const RFC1766 = '[a-z]{2}(?:-[A-Z]{2})?';
+    # PHP 5.6 -- const RFC1766 = self::ISO639_1 . '(?:[-_]' . self::ISO3166_1 . ')?';
+    const RFC1766 = '(?<language>[a-z]{2})(?:[-_](?<country>[A-Z]{2}))?';
 
     /**
      * @const Matches an IETF language tag composed of two subtags:
      *        • 3-letter language (ISO 639-2)
      *        • 2-letter country (ISO 3166-1)
      */
-    # PHP 5.6 -- const RFC3066 = self::ISO639_2 . '(?:-' . self::ISO3166_1 . ')?';
-    const RFC3066 = '[a-z]{3}(?:-[A-Z]{2})?';
+    # PHP 5.6 -- const RFC3066 = self::ISO639_2 . '(?:[-_]' . self::ISO3166_1 . ')?';
+    const RFC3066 = '(?<language>[a-z]{3})(?:[-_](?<country>[A-Z]{2}))?';
 
     /**
      * @const Matches an IETF language tag composed of two subtags:
      *        • 2 or 3-letter language (ISO 639-1, ISO 639-2, and ISO 639-3)
      *        • 2-letter or 3-digit country subtag (ISO 3166-1 or UN M.49)
      */
-    # PHP 5.6 -- const RFC5646 = self::ISO639 . '(?:-(?:' . self::ISO3166_1 . '|' . self::UNM49 . '))?';
-    const RFC5646 = '[a-z]{2,3}(?:-(?:[A-Z]{2}|[0-9]{3}))?';
+    # PHP 5.6 -- const RFC5646 = self::ISO639 . '(?:[-_](?:' . self::ISO3166_1 . '|' . self::UNM49 . '))?';
+    const RFC5646 = '(?<language>[a-z]{2,3})(?:[-_](?<country>[A-Z]{2}|[0-9]{3}))?';
 
     /**
      * Regular expression used for matching culture code.
@@ -436,10 +436,14 @@ class Polyglot
     protected function getFromPath(ServerRequestInterface $request)
     {
         $uri   = $request->getUri();
-        $regex = '~^\/?(' . $this->getRegEx() . ')(?!-)\b~';
+        $regex = '~^\/?' . $this->getRegEx() . '\b~';
 
         if ( preg_match($regex, $uri->getPath(), $matches) ) {
-            return $matches[1];
+            if (isset($matches['language'])) {
+                return $matches['language'];
+            } else {
+                throw new RuntimeException('The regular expression pattern is missing a named subpattern "language".');
+            }
         }
     }
 
@@ -452,11 +456,17 @@ class Polyglot
      */
     protected function getFromQuery(ServerRequestInterface $request)
     {
-        $params  = $request->getQueryParams();
-        $matches = array_intersect_key($params, array_flip($this->getQueryKeys()));
+        $params = array_intersect_key($request->getQueryParams(), array_flip($this->getQueryKeys()));
+        $regex  = '~^\/?' . $this->getRegEx() . '\b~';
 
-        if ( count($matches) ) {
-            return reset($matches);
+        foreach ($params as $key => $value) {
+            if ( preg_match($regex, $value, $matches) ) {
+                if (isset($matches['language'])) {
+                    return $matches['language'];
+                } else {
+                    throw new RuntimeException('The regular expression pattern is missing a named subpattern "language".');
+                }
+            }
         }
     }
 
