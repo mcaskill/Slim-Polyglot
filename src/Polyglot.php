@@ -165,48 +165,46 @@ class Polyglot
      *
      * Since each parameter requires a distinct type, parameters can be omitted if uneeded.
      *
-     * @param array                    $languages                Defines the supported languages.
-     *     Optionally, this parameter can be used like an arguments bag.
-     * @param null|string              $fallbackLanguage         Defines the fallback language;
-     *     must exist in $languages. If undefined, the first item from $languages is used.
-     * @param null|callable|callable[] $callbacks                Defines one or more functions or methods
-     *     to call when the language has been established.
-     * @param null|boolean             $languageRequiredInUri    Defines whether a language is always
-     *     present in the URI.
-     * @param null|string|string[]     $queryStringKeys          Defines the keys to look for among the request's query parameters.
-     * @param null|boolean             $languageIncludedInRoutes Defines whether routes include language.
+     * @param array $options {
+     *     Optional. To configure the middleware.
      *
-     * @throws RuntimeException If the session cannot be found.
-     * @todo   Modify the constructor to handle an argument bag.
+     *     @var array                    $languages                Defines the supported languages.
+     *     @var null|string              $fallbackLanguage         Defines the fallback language; must exist in $languages.
+     *                                                               If undefined, the first item from $languages is used.
+     *     @var null|callable|callable[] $callbacks                Defines one or more functions or methods
+     *                                                               to call when the language has been established.
+     *     @var null|boolean             $languageRequiredInUri    Defines whether a language is always present in the URI.
+     *     @var null|string|string[]     $queryStringKeys          Defines the keys to look for among the request's query parameters.
+     *     @var null|boolean             $languageIncludedInRoutes Defines whether routes include language.
+     * }
      */
-    public function __construct(array $languages, $fallbackLanguage = null, $callbacks = null, $queryStringKeys = null, $languageRequiredInUri = null, $languageIncludedInRoutes = null)
+    public function __construct(array $options = [])
     {
         $default_args = [
             'languages'                => [],
             'fallbackLanguage'         => null,
             'callbacks'                => null,
+            'regexPattern'             => null,
             'queryStringKeys'          => [],
             'languageRequiredInUri'    => null,
             'languageIncludedInRoutes' => null
         ];
 
-        if ( array_intersect(array_keys($default_args), array_keys($languages)) ) {
-            $args = array_merge($default_args, $languages);
+        $args = array_merge($default_args, $options);
 
-            if ( isset($args['callback']) ) {
-                $args['callbacks'] = $args['callback'];
-            }
-
-            if ( isset($args['callable']) ) {
-                $args['callbacks'] = $args['callable'];
-            }
-
-            if ( isset($args['callables']) ) {
-                $args['callbacks'] = $args['callables'];
-            }
-
-            extract($args, EXTR_IF_EXISTS);
+        if ( isset($args['callback']) ) {
+            $args['callbacks'] = $args['callback'];
         }
+
+        if ( isset($args['callable']) ) {
+            $args['callbacks'] = $args['callable'];
+        }
+
+        if ( isset($args['callables']) ) {
+            $args['callbacks'] = $args['callables'];
+        }
+
+        extract($args, EXTR_SKIP);
 
         if (is_array($languages)) {
             $this->setSupportedLanguages($languages);
@@ -220,6 +218,10 @@ class Polyglot
             $this->addCallback($callbacks);
         } elseif (is_array($callbacks)) {
             $this->setCallbacks($callbacks);
+        }
+
+        if (isset($regexPattern)) {
+            $this->setRegEx($regexPattern);
         }
 
         if (is_string($queryStringKeys)) {
@@ -307,13 +309,11 @@ class Polyglot
             }
         }
         elseif ( ! $this->isSupported($language) ) {
-            $request  = $request->withAttribute('language-path', $language);
             $language = $this->getUserLanguage($request);
             $request  = $request->withAttribute('language-preferred', $language);
 
-            if ( empty($language) ) {
-                $language = $fallback;
-            }
+            $language = $fallback;
+            $request  = $request->withAttribute('language-path', $language);
 
             $path       = $this->replaceLanguage($uri->getPath(), $request->getAttribute('language-path'), $language);
             $response   = $response->withRedirect($uri->withPath($path), 303);
