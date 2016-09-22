@@ -268,7 +268,7 @@ class Polyglot
         $redirected = false;
 
         /** @var string For manipulation later on in this method. */
-        $uri = $request->getUri();
+        $uri = $request->getUri()->withUserInfo('');
 
         /** @var string Start language resolution with the current request's query parameters. */
         $language = $this->getFromQuery($request);
