@@ -12,6 +12,13 @@
 			"homepage": "https://mcaskill.ca"
 		}
 	],
+	"extra": {
+		"branch-alias": {
+			"dev-master": "0.1.x-dev"
+		}
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"require": {
 		"php": ">=5.5.0",
 		"willdurand/negotiation": "^2.0"
