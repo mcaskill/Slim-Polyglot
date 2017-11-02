@@ -59,7 +59,7 @@ $app->add(
 			},
 			[ 'MySuperApp', 'set_language' ]
 		]
-	)
+	])
 );
 
 // Example route with ETag header
