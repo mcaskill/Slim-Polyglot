@@ -49,19 +49,17 @@ $container = $app->getContainer();
 
 // Register Middleware
 $app->add(
-	new Polyglot(
-		// Available languages
-		[ 'en', 'fr', 'es' ],
-		// Fallback language
-		'fr',
+	new Polyglot([
+		'languages' => [ 'en', 'fr', 'es' ],
+		'fallbackLanguage' => 'fr',
 		// Hooks to call after language is resolved
-		[
+		'callbacks' => [
 			function ($language) use ($container) {
 				$container['environment']['language.current'] = $language;
 			},
 			[ 'MySuperApp', 'set_language' ]
 		]
-	)
+	])
 );
 
 // Example route with ETag header
