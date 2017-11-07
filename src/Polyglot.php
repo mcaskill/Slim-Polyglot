@@ -125,6 +125,13 @@ class Polyglot
     protected $languageIncludedInRoutes = false;
 
     /**
+     * Whether to save and reuse the result of language calculations between different runs.
+     *
+     * @var boolean
+     */
+    protected $saveInSession = true;
+
+    /**
      * Query string keys to look for when resolving the current language (e.g., `?lang=fr`)
      *
      * @var string[]
@@ -176,6 +183,7 @@ class Polyglot
      *     @var null|boolean             $languageRequiredInUri    Defines whether a language is always present in the URI.
      *     @var null|string|string[]     $queryStringKeys          Defines the keys to look for among the request's query parameters.
      *     @var null|boolean             $languageIncludedInRoutes Defines whether routes include language.
+     *     @var boolean                  $saveInSession            Defines whether to save and reuse the result of language calculations between different runs.
      * }
      */
     public function __construct(array $options = [])
@@ -187,7 +195,8 @@ class Polyglot
             'regexPattern'             => null,
             'queryStringKeys'          => [],
             'languageRequiredInUri'    => null,
-            'languageIncludedInRoutes' => null
+            'languageIncludedInRoutes' => null,
+            'saveInSession'            => true,
         ];
 
         $args = array_merge($default_args, $options);
@@ -236,6 +245,10 @@ class Polyglot
 
         if (isset($languageIncludedInRoutes)) {
             $this->isLanguageIncludedInRoutes($languageIncludedInRoutes);
+        }
+
+        if (is_bool($saveInSession)) {
+            $this->saveInSession = $saveInSession;
         }
     }
 
@@ -557,7 +570,11 @@ class Polyglot
      */
     public function getUserLanguage(ServerRequestInterface $request = null)
     {
-        if ( isset($_SESSION['language']) && $this->isSupported($_SESSION['language']) ) {
+        if (
+            $this->saveInSession &&
+            isset($_SESSION['language']) &&
+            $this->isSupported($_SESSION['language'])
+        ) {
             return $_SESSION['language'];
         }
 
@@ -583,7 +600,9 @@ class Polyglot
      */
     public function setUserLanguage($language)
     {
-        $_SESSION['language'] = $this->sanitizeLanguage($language);
+        if ($this->saveInSession) {
+            $_SESSION['language'] = $this->sanitizeLanguage($language);
+        }
 
         return $this;
     }
