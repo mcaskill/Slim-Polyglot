@@ -21,7 +21,12 @@ Requires Slim 3.0.0 or newer.
 ## Usage
 
 ```php
-$app = new \Slim\App();
+<?php
+
+use Slim\App;
+use McAskill\Slim\Polyglot\Polyglot;
+
+$app = new App();
 
 // Fetch DI Container
 $container = $app->getContainer();
@@ -42,7 +47,12 @@ $app->run();
 The Polyglot middleware can also accept callbacks that are executed after a language is chosen.
 
 ```php
-$app = new \Slim\App();
+<?php
+
+use Slim\App;
+use McAskill\Slim\Polyglot\Polyglot;
+
+$app = new App();
 
 // Fetch DI Container
 $container = $app->getContainer();
