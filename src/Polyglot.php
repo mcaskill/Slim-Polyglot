@@ -325,7 +325,10 @@ class Polyglot
             $language = $this->getUserLanguage($request);
             $request  = $request->withAttribute('language-preferred', $language);
 
-            $language = $fallback;
+            if ( empty($language) ) {
+                $language = $fallback;
+            }
+            
             $request  = $request->withAttribute('language-path', $language);
 
             $path       = $this->replaceLanguage($uri->getPath(), $request->getAttribute('language-path'), $language);
