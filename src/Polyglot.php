@@ -322,26 +322,30 @@ class Polyglot
             }
         }
         elseif ( ! $this->isSupported($language) ) {
+
+            $path       = $this->replaceLanguage($uri->getPath(), $language, $fallback);
+            $request    = $request->withUri( $uri->withPath( $this->stripLanguage( $uri->getPath(), $language)));
+
             $language = $this->getUserLanguage($request);
             $request  = $request->withAttribute('language-preferred', $language);
 
             $language = $fallback;
-            $request  = $request->withAttribute('language-path', $language);
+            $request  = $request->withAttribute('language-path', $fallback);
 
-            $path       = $this->replaceLanguage($uri->getPath(), $request->getAttribute('language-path'), $language);
             $response   = $response->withRedirect($uri->withPath($path), 303);
             $redirected = true;
         }
 
         if ( ! $redirected && ! $this->isLanguageIncludedInRoutes() ) {
-            $request = $request->withUri(
-                $uri->withPath(
-                    $this->stripLanguage(
-                        $uri->getPath(),
-                        $language
-                    )
-                )
-            );
+
+            $path = $this->stripLanguage( $uri->getPath(), $language);
+
+            //Empty path redirect to path '/'
+            if (empty($path)) {
+                $response   = $response->withRedirect($uri->withPath($this->prependLanguage('/', $language)), 303);
+            }
+
+            $request = $request->withUri($uri->withPath( $path, $language));
         }
 
         /** Assign the language to the request, response, client session, and third-party service. */
@@ -355,7 +359,18 @@ class Polyglot
             }
         }
 
-        return $next($request, $response);
+        $response = $next($request, $response);
+
+        /** If the language is required, make sure the URI has it on redirect. */
+        if ( $this->isLanguageRequiredInUri() && $response->isRedirect() ) {
+
+            $response_uri = (object)parse_url($response->getHeaderLine('Location'));
+            $path = str_replace($uri->getBasePath() . '/', '', $response_uri->path);
+            $path = $this->replaceLanguage($path, $language, $language);
+            $response   = $response->withRedirect($uri->withPath($path), 303);
+        }
+
+        return $response;
     }
 
     /**
@@ -368,14 +383,10 @@ class Polyglot
      */
     public function stripLanguage($path, $language = null)
     {
-        $strip = '/' . ( isset($language) ? $language : $this->getLanguage() );
+        $strip = ( isset($language) ? $language : $this->getLanguage() );
 
         if ( strlen($strip) > 1 && strpos($path, $strip) === 0 ) {
             $path = substr($path, strlen($strip));
-
-            if ( strlen($path) === 0 ) {
-                $path = '/';
-            }
         }
 
         return $path;
@@ -391,10 +402,10 @@ class Polyglot
      */
     public function prependLanguage($path, $language = null)
     {
-        $prepend = '/' . ( isset($language) ? $language : $this->getLanguage() );
+        $prepend = ( isset($language) ? $language : $this->getLanguage() );
 
         if ( strlen($prepend) > 1 ) {
-            return $prepend . $path;
+            return $prepend . (strpos($path, '/') === 0 ? $path : '/' . $path);
         }
 
         return $path;
@@ -450,8 +461,9 @@ class Polyglot
     {
         $uri   = $request->getUri();
         $regex = '~^\/?' . $this->getRegEx() . '\b~';
+        $path = rtrim( $uri->getPath(), '/\\' ) . '/';
 
-        if ( preg_match($regex, $uri->getPath(), $matches) ) {
+        if ( preg_match($regex, $path, $matches) ) {
             if (isset($matches['language'])) {
                 return $matches['language'];
             } else {
