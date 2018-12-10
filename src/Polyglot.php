@@ -359,15 +359,23 @@ class Polyglot
             }
         }
 
+        //Next Middleware
         $response = $next($request, $response);
 
+        //After
         /** If the language is required, make sure the URI has it on redirect. */
         if ( $this->isLanguageRequiredInUri() && $response->isRedirect() ) {
 
             $response_uri = (object)parse_url($response->getHeaderLine('Location'));
-            $path = str_replace($uri->getBasePath() . '/', '', $response_uri->path);
-            $path = $this->replaceLanguage($path, $language, $language);
-            $response   = $response->withRedirect($uri->withPath($path), 303);
+
+            //Only same host apply language
+            if (!$response_uri->host || $response_uri->host === $uri->getHost()) {
+
+                $path = str_replace($uri->getBasePath() . '/', '', $response_uri->path);
+                $path = $this->replaceLanguage($path, $language, $language);
+
+                $response   = $response->withRedirect($uri->withPath($path), 303);
+            }
         }
 
         return $response;
