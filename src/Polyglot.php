@@ -145,7 +145,7 @@ class Polyglot
      *
      * @var callable[]
      */
-    protected $callbacks;
+    protected $callbacks = [];
 
     /**
      * Supported languages
