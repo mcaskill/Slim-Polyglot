@@ -391,7 +391,7 @@ class Polyglot
      */
     public function stripLanguage($path, $language = null)
     {
-        $strip = ( isset($language) ? $language : $this->getLanguage() );
+        $strip = '/' . ( isset($language) ? $language : $this->getLanguage() );
 
         if ( strlen($strip) > 1 && strpos($path, $strip) === 0 ) {
             $path = substr($path, strlen($strip));
