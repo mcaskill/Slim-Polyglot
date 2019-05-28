@@ -370,10 +370,8 @@ class Polyglot
 
             //Only same host apply language
             if (!$response_uri->host || $response_uri->host === $uri->getHost()) {
-
-                $path = str_replace($uri->getBasePath() . '/', '', $response_uri->path);
+                $path = $uri->getBasePath() != '' ? str_replace($uri->getBasePath() . '/', '', $response_uri->path) : $response_uri->path;
                 $path = $this->replaceLanguage($path, $language, $language);
-
                 $response   = $response->withRedirect($uri->withPath($path), 303);
             }
         }
