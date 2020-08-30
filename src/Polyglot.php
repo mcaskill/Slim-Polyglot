@@ -468,7 +468,7 @@ class Polyglot
     protected function getFromPath(ServerRequestInterface $request)
     {
         $uri   = $request->getUri();
-        $regex = '~^\/?' . $this->getRegEx() . '\b~';
+        $regex = '~^/?' . $this->getRegEx() . '/~';
         $path = rtrim( $uri->getPath(), '/\\' ) . '/';
 
         if ( preg_match($regex, $path, $matches) ) {
@@ -490,7 +490,7 @@ class Polyglot
     protected function getFromQuery(ServerRequestInterface $request)
     {
         $params = array_intersect_key($request->getQueryParams(), array_flip($this->getQueryKeys()));
-        $regex  = '~^\/?' . $this->getRegEx() . '\b~';
+        $regex  = '~^' . $this->getRegEx() . '$~';
 
         foreach ($params as $key => $value) {
             if ( preg_match($regex, $value, $matches) ) {
