@@ -44,6 +44,11 @@ use Psr\Http\Message\ResponseInterface;
 class Polyglot
 {
     /**
+     * @const Matches only the {@see self::$languages supported languages}.
+     */
+    const EXACT    = 'EXACT';
+
+    /**
      * @const Matches ISO 639-1, ISO 639-2, and ISO 639-3
      */
     const ISO639   = '(?<language>[a-z]{2,3})(?![-_])';
@@ -736,11 +741,23 @@ class Polyglot
      *
      * @return self
      *
+     * @throws RuntimeException if there are no available languages
      * @throws RuntimeException if the variable isn't a string
      */
     public function setRegEx($regex)
     {
         if ( is_string($regex) ) {
+            if ( $regex === self::EXACT ) {
+                if ( 0 === count($this->languages) ) {
+                    throw new RuntimeException('Polyglot features no supported languages.');
+                }
+
+                $languages = array_map('preg_quote', (array)$this->languages, [ '~' ]);
+                $languages = implode('|', $languages);
+
+                $regex = '(?<language>'.$languages.')(?![-_])';
+            }
+
             $this->regex = $regex;
         }
         else {
