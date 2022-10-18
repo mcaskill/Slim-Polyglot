@@ -21,8 +21,6 @@ Requires Slim 3.
 ## Usage
 
 ```php
-<?php
-
 use Slim\App;
 use McAskill\Slim\Polyglot\Polyglot;
 
@@ -32,7 +30,7 @@ $app = new App();
 $container = $app->getContainer();
 
 // Register Middleware
-$app->add( new Polyglot([ 'en', 'fr', 'es' ]) );
+$app->add(new Polyglot([ 'en', 'fr', 'es' ]));
 
 // Example route with ETag header
 $app->get('/foo', function ($request, $response) {
@@ -48,8 +46,6 @@ The Polyglot middleware can also accept callbacks that are executed
 after a language is chosen.
 
 ```php
-<?php
-
 use Slim\App;
 use McAskill\Slim\Polyglot\Polyglot;
 

@@ -2,11 +2,9 @@
 
 namespace McAskill\Slim\Polyglot;
 
-use RuntimeException;
 use InvalidArgumentException;
-
+use RuntimeException;
 use Negotiation\LanguageNegotiator as Negotiator;
-
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -206,15 +204,15 @@ class Polyglot
 
         $args = array_merge($default_args, $options);
 
-        if ( isset($args['callback']) ) {
+        if (isset($args['callback'])) {
             $args['callbacks'] = $args['callback'];
         }
 
-        if ( isset($args['callable']) ) {
+        if (isset($args['callable'])) {
             $args['callbacks'] = $args['callable'];
         }
 
-        if ( isset($args['callables']) ) {
+        if (isset($args['callables'])) {
             $args['callbacks'] = $args['callables'];
         }
 
@@ -292,21 +290,21 @@ class Polyglot
         $language = $this->getFromQuery($request);
 
         /** @var string Start language resolution with the current request URI. */
-        if ( empty($language) ) {
+        if (empty($language)) {
             $language = $this->getFromPath($request);
         }
 
-        if ( empty($language) ) {
+        if (empty($language)) {
             /** @var string Retrieve a language from the client's headers. */
             $language = $this->getUserLanguage($request);
             $request  = $request->withAttribute('language-preferred', $language);
 
-            if ( empty($language) ) {
+            if (empty($language)) {
                 $language = $fallback;
             }
 
             /** If the language is required, make sure the URI has it. */
-            if ( $this->isLanguageRequiredInUri() ) {
+            if ($this->isLanguageRequiredInUri()) {
                 $path       = $this->prependLanguage($uri->getPath(), $language);
                 $response   = $response->withRedirect($uri->withPath($path), 303);
                 $redirected = true;
@@ -325,11 +323,9 @@ class Polyglot
                     )
                 );
             }
-        }
-        elseif ( ! $this->isSupported($language) ) {
-
-            $path       = $this->replaceLanguage($uri->getPath(), $language, $fallback);
-            $request    = $request->withUri( $uri->withPath( $this->stripLanguage( $uri->getPath(), $language)));
+        } elseif (! $this->isSupported($language)) {
+            $path     = $this->replaceLanguage($uri->getPath(), $language, $fallback);
+            $request  = $request->withUri($uri->withPath($this->stripLanguage($uri->getPath(), $language)));
 
             $language = $this->getUserLanguage($request);
             $request  = $request->withAttribute('language-preferred', $language);
@@ -341,16 +337,15 @@ class Polyglot
             $redirected = true;
         }
 
-        if ( ! $redirected && ! $this->isLanguageIncludedInRoutes() ) {
-
-            $path = $this->stripLanguage( $uri->getPath(), $language);
+        if (! $redirected && ! $this->isLanguageIncludedInRoutes()) {
+            $path = $this->stripLanguage($uri->getPath(), $language);
 
             // Empty path redirect to path '/'
-            if ( empty($path) ) {
+            if (empty($path)) {
                 $response   = $response->withRedirect($uri->withPath($this->prependLanguage('/', $language)), 303);
             }
 
-            $request = $request->withUri($uri->withPath( $path, $language));
+            $request = $request->withUri($uri->withPath($path, $language));
         }
 
         /** Assign the language to the request, response, client session, and third-party service. */
@@ -358,7 +353,7 @@ class Polyglot
         $response = $response->withHeader('Content-Language', $language);
         $this->setUserLanguage($language);
 
-        if ( count($callbacks) ) {
+        if (count($callbacks)) {
             foreach ($callbacks as $callable) {
                 call_user_func($callable, $language);
             }
@@ -367,14 +362,14 @@ class Polyglot
         $response = $next($request, $response);
 
         /** If the language is required, make sure the URI has it on redirect. */
-        if ( $this->isLanguageRequiredInUri() && $response->isRedirect() ) {
-            $responseUri = (object)parse_url($response->getHeaderLine('Location'));
+        if ($this->isLanguageRequiredInUri() && $response->isRedirect()) {
+            $responseUri = (object) parse_url($response->getHeaderLine('Location'));
 
             /** Only same host */
-            if ( ! $responseUri->host || $responseUri->host === $uri->getHost() ) {
+            if (! $responseUri->host || $responseUri->host === $uri->getHost()) {
                 $path = $responseUri->path;
 
-                if ( $uri->getBasePath() !== '' ) {
+                if ($uri->getBasePath() !== '') {
                     $path = str_replace($uri->getBasePath() . '/', '', $path);
                 }
 
@@ -396,9 +391,9 @@ class Polyglot
      */
     public function stripLanguage($path, $language = null)
     {
-        $strip = '/' . ( isset($language) ? $language : $this->getLanguage() );
+        $strip = '/' . (isset($language) ? $language : $this->getLanguage());
 
-        if ( strlen($strip) > 1 && strpos($path, $strip) === 0 ) {
+        if (strlen($strip) > 1 && strpos($path, $strip) === 0) {
             $path = substr($path, strlen($strip));
         }
 
@@ -415,9 +410,9 @@ class Polyglot
      */
     public function prependLanguage($path, $language = null)
     {
-        $prepend = ( isset($language) ? $language : $this->getLanguage() );
+        $prepend = (isset($language) ? $language : $this->getLanguage());
 
-        if ( strlen($prepend) > 1 ) {
+        if (strlen($prepend) > 1) {
             return $prepend . (strpos($path, '/') === 0 ? $path : '/' . $path);
         }
 
@@ -452,13 +447,13 @@ class Polyglot
     {
         $accept = $request->getHeaderLine('Accept-Language');
 
-        if ( empty($accept) || empty($this->languages) ) {
+        if (empty($accept) || empty($this->languages)) {
             return;
         }
 
         $language = (new Negotiator())->getBest($accept, $this->languages);
 
-        if ( $language ) {
+        if ($language) {
             return $language->getValue();
         }
     }
@@ -474,9 +469,9 @@ class Polyglot
     {
         $uri   = $request->getUri();
         $regex = '~^/?' . $this->getRegEx() . '/~';
-        $path = rtrim( $uri->getPath(), '/\\' ) . '/';
+        $path = rtrim($uri->getPath(), '/\\') . '/';
 
-        if ( preg_match($regex, $path, $matches) ) {
+        if (preg_match($regex, $path, $matches)) {
             if (isset($matches['language'])) {
                 return $matches['language'];
             } else {
@@ -498,7 +493,7 @@ class Polyglot
         $regex  = '~^' . $this->getRegEx() . '$~';
 
         foreach ($params as $key => $value) {
-            if ( preg_match($regex, $value, $matches) ) {
+            if (preg_match($regex, $value, $matches)) {
                 if (isset($matches['language'])) {
                     return $matches['language'];
                 } else {
@@ -524,8 +519,6 @@ class Polyglot
      * @param array $languages
      *
      * @return self
-     *
-     * @throws RuntimeException if the variable isn't an array
      */
     public function setSupportedLanguages(array $languages)
     {
@@ -546,7 +539,7 @@ class Polyglot
      */
     public function getLanguage(ServerRequestInterface $request = null)
     {
-        return ( $this->getUserLanguage($request) ?: $this->getFallbackLanguage() );
+        return ($this->getUserLanguage($request) ?: $this->getFallbackLanguage());
     }
 
     /**
@@ -572,10 +565,9 @@ class Polyglot
      */
     public function setFallbackLanguage($language)
     {
-        if ( $this->isSupported($language) ) {
+        if ($this->isSupported($language)) {
             $this->fallbackLanguage = $language;
-        }
-        else {
+        } else {
             throw new RuntimeException('Variable must be one of the supported languages.');
         }
 
@@ -603,7 +595,7 @@ class Polyglot
             return $_SESSION['language'];
         }
 
-        if ( empty($language) && $request instanceof ServerRequestInterface ) {
+        if (empty($language) && $request instanceof ServerRequestInterface) {
             return $this->getFromHeader($request);
         }
 
@@ -715,7 +707,7 @@ class Polyglot
      */
     public function addQueryKey($key)
     {
-        if ( ! is_string($key) ) {
+        if (! is_string($key)) {
             throw new InvalidArgumentException('Query string key must be a string.');
         }
 
@@ -746,23 +738,22 @@ class Polyglot
      */
     public function setRegEx($regex)
     {
-        if ( is_string($regex) ) {
-            if ( $regex === self::EXACT ) {
-                if ( 0 === count($this->languages) ) {
-                    throw new RuntimeException('Polyglot features no supported languages.');
-                }
-
-                $languages = array_map('preg_quote', (array)$this->languages, [ '~' ]);
-                $languages = implode('|', $languages);
-
-                $regex = '(?<language>'.$languages.')(?![-_])';
-            }
-
-            $this->regex = $regex;
-        }
-        else {
+        if (! is_string($regex)) {
             throw new InvalidArgumentException('Variable must be a string.');
         }
+
+        if ($regex === self::EXACT) {
+            if (0 === count($this->languages)) {
+                throw new RuntimeException('Polyglot features no supported languages.');
+            }
+
+            $languages = array_map('preg_quote', (array) $this->languages, [ '~' ]);
+            $languages = implode('|', $languages);
+
+            $regex = '(?<language>'.$languages.')(?![-_])';
+        }
+
+        $this->regex = $regex;
 
         return $this;
     }
@@ -778,11 +769,11 @@ class Polyglot
      */
     public function sanitizeLanguage($language)
     {
-        if ( 0 === count($this->languages) ) {
+        if (0 === count($this->languages)) {
             throw new RuntimeException('Polyglot features no supported languages.');
         }
 
-        if ( ! $this->isSupported($language) ) {
+        if (! $this->isSupported($language)) {
             $language = $this->getFallbackLanguage();
         }
 

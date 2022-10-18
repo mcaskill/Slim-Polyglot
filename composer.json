@@ -1,39 +1,39 @@
 {
-	"name": "mcaskill/slim-polyglot",
-	"type": "library",
-	"description": "Slim 3 language resolution middleware",
-	"keywords": [ "slim", "framework", "middleware", "language", "multilingual", "polylingual" ],
-	"homepage": "https://github.com/mcaskill/Slim-Polyglot",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Chauncey McAskill",
-			"email": "chauncey@mcaskill.ca",
-			"homepage": "https://mcaskill.ca"
-		}
-	],
-	"extra": {
-		"branch-alias": {
-			"dev-master": "0.5.x-dev"
-		}
-	},
-	"minimum-stability": "dev",
-	"prefer-stable": true,
-	"require": {
-		"php": ">=5.5.0",
-		"willdurand/negotiation": "^3.0"
-	},
-	"require-dev": {
-		"slim/slim": "^3.0"
-	},
-	"autoload": {
-		"psr-4": {
-			"McAskill\\Slim\\Polyglot\\": "src"
-		}
-	},
-	"autoload-dev": {
-		"psr-4": {
-			"Slim\\Slim\\Polyglot\\Tests\\": "tests"
-		}
-	}
+    "name": "mcaskill/slim-polyglot",
+    "type": "library",
+    "description": "Slim 3 language resolution middleware",
+    "keywords": [ "slim", "framework", "middleware", "language", "multilingual", "polylingual" ],
+    "homepage": "https://github.com/mcaskill/Slim-Polyglot",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Chauncey McAskill",
+            "email": "chauncey@mcaskill.ca",
+            "homepage": "https://mcaskill.ca"
+        }
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.5.x-dev"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=5.5.0",
+        "willdurand/negotiation": "^3.0"
+    },
+    "require-dev": {
+        "slim/slim": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "McAskill\\Slim\\Polyglot\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "McAskill\\Slim\\Polyglot\\Tests\\": "tests"
+        }
+    }
 }
