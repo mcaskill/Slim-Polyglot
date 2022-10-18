@@ -2,8 +2,8 @@
 
 namespace McAskill\Slim\Polyglot;
 
-use InvalidArgumentException;
-use RuntimeException;
+use McAskill\Slim\Polyglot\Exception\InvalidArgumentException;
+use McAskill\Slim\Polyglot\Exception\RuntimeException;
 use Negotiation\LanguageNegotiator as Negotiator;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -475,7 +475,9 @@ class Polyglot
             if (isset($matches['language'])) {
                 return $matches['language'];
             } else {
-                throw new RuntimeException('The regular expression pattern is missing a named subpattern "language".');
+                throw new RuntimeException(
+                    'The regular expression pattern is missing a named subpattern "language"'
+                );
             }
         }
     }
@@ -497,7 +499,9 @@ class Polyglot
                 if (isset($matches['language'])) {
                     return $matches['language'];
                 } else {
-                    throw new RuntimeException('The regular expression pattern is missing a named subpattern "language".');
+                    throw new RuntimeException(
+                        'The regular expression pattern is missing a named subpattern "language"'
+                    );
                 }
             }
         }
@@ -568,7 +572,9 @@ class Polyglot
         if ($this->isSupported($language)) {
             $this->fallbackLanguage = $language;
         } else {
-            throw new RuntimeException('Variable must be one of the supported languages.');
+            throw new RuntimeException(
+                'Variable must be one of the supported languages'
+            );
         }
 
         return $this;
@@ -708,7 +714,9 @@ class Polyglot
     public function addQueryKey($key)
     {
         if (! is_string($key)) {
-            throw new InvalidArgumentException('Query string key must be a string.');
+            throw new InvalidArgumentException(
+                'Query string key must be a string'
+            );
         }
 
         $this->queryKeys[] = $key;
@@ -739,12 +747,16 @@ class Polyglot
     public function setRegEx($regex)
     {
         if (! is_string($regex)) {
-            throw new InvalidArgumentException('Variable must be a string.');
+            throw new InvalidArgumentException(
+                'Variable must be a string'
+            );
         }
 
         if ($regex === self::EXACT) {
             if (0 === count($this->languages)) {
-                throw new RuntimeException('Polyglot features no supported languages.');
+                throw new RuntimeException(
+                    'Polyglot features no supported languages'
+                );
             }
 
             $languages = array_map('preg_quote', (array) $this->languages, [ '~' ]);
@@ -770,7 +782,9 @@ class Polyglot
     public function sanitizeLanguage($language)
     {
         if (0 === count($this->languages)) {
-            throw new RuntimeException('Polyglot features no supported languages.');
+            throw new RuntimeException(
+                'Polyglot features no supported languages'
+            );
         }
 
         if (! $this->isSupported($language)) {
