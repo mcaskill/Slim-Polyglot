@@ -21,7 +21,7 @@
 	"prefer-stable": true,
 	"require": {
 		"php": ">=5.5.0",
-		"willdurand/negotiation": "^2.0"
+		"willdurand/negotiation": "^3.0"
 	},
 	"require-dev": {
 		"slim/slim": "^3.0"
