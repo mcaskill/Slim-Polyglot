@@ -1,7 +1,7 @@
 {
 	"name": "mcaskill/slim-polyglot",
 	"type": "library",
-	"description": "Slim Framework language resolution middleware",
+	"description": "Slim 3 language resolution middleware",
 	"keywords": [ "slim", "framework", "middleware", "language", "multilingual", "polylingual" ],
 	"homepage": "https://github.com/mcaskill/Slim-Polyglot",
 	"license": "MIT",
